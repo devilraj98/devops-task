@@ -44,8 +44,15 @@ pipeline {
         
         stage('Deploy') {
             steps {
-                echo 'Deploying application...'
-                sh "docker run -d -p 3000:3000 --name devops-app-${BUILD_NUMBER} ${DOCKER_IMAGE}:latest"
+                echo 'Deploying to AWS ECS...'
+                sh '''
+                    # Update ECS service with new image
+                    aws ecs update-service \
+                        --cluster devops-cluster \
+                        --service devops-service \
+                        --task-definition devops-task \
+                        --region us-east-1
+                '''
             }
         }
     }
