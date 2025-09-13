@@ -1,6 +1,10 @@
 pipeline {
     agent any
     
+    tools {
+        nodejs 'NodeJS-18'
+    }
+    
     environment {
         DOCKER_IMAGE = 'devilraj98/devops-task'
         DOCKER_TAG = "${BUILD_NUMBER}"
