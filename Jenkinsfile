@@ -9,6 +9,8 @@ pipeline {
         DOCKER_IMAGE = 'neeraj98/devops-task'
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        AWS_CREDENTIALS = credentials('aws-credentials')
+        AWS_DEFAULT_REGION = 'us-east-1'
     }
     
     triggers {
