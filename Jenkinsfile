@@ -24,9 +24,13 @@ pipeline {
                 sh '''
                     # Make script executable
                     chmod +x ecs-setup.sh
+                    chmod +x alb-setup.sh
                     
                     # Run infrastructure setup (idempotent)
                     ./ecs-setup.sh || echo "Infrastructure already exists or setup completed"
+                    
+                    # Setup ALB for fixed endpoint
+                    ./alb-setup.sh || echo "ALB already exists or setup completed"
                 '''
             }
         }
@@ -83,11 +87,17 @@ pipeline {
                         --output text 2>/dev/null || echo "None")
                     
                     if [ "$SERVICE_EXISTS" = "None" ] || [ "$SERVICE_EXISTS" = "INACTIVE" ]; then
-                        echo "Creating new ECS service..."
+                        echo "Creating new ECS service with ALB..."
+                        # Get ALB target group ARN
+                        TARGET_GROUP_ARN=$(aws elbv2 describe-target-groups --names devops-targets --query 'TargetGroups[0].TargetGroupArn' --output text --region us-east-1)
+                        
                         # Get VPC and subnet info for service creation
                         VPC_ID=$(aws ec2 describe-vpcs --filters "Name=is-default,Values=true" --query "Vpcs[0].VpcId" --output text --region us-east-1)
                         SUBNET_IDS=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets[0:2].SubnetId" --output text --region us-east-1 | tr '\t' ',')
                         SECURITY_GROUP_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=devops-ecs-sg" --query "SecurityGroups[0].GroupId" --output text --region us-east-1)
+                        
+                        # Update service definition with target group ARN
+                        sed "s/TARGET_GROUP_ARN_PLACEHOLDER/$TARGET_GROUP_ARN/g" service-definition.json > service-definition-updated.json
                         
                         aws ecs create-service \
                             --cluster devops-cluster \
@@ -96,6 +106,7 @@ pipeline {
                             --desired-count 1 \
                             --launch-type FARGATE \
                             --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],securityGroups=[$SECURITY_GROUP_ID],assignPublicIp=ENABLED}" \
+                            --load-balancers "targetGroupArn=$TARGET_GROUP_ARN,containerName=devops-app,containerPort=3000" \
                             --region us-east-1
                     else
                         echo "Updating existing ECS service..."
@@ -111,6 +122,10 @@ pipeline {
                         --cluster devops-cluster \
                         --services devops-service \
                         --region us-east-1
+                    
+                    # Display ALB endpoint
+                    ALB_DNS=$(aws elbv2 describe-load-balancers --names devops-alb --query 'LoadBalancers[0].DNSName' --output text --region us-east-1 2>/dev/null || echo "ALB not found")
+                    echo "Application accessible at: http://$ALB_DNS"
                 '''
             }
         }
