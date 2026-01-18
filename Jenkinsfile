@@ -17,7 +17,7 @@ pipeline {
         githubPush()
     }
     
-    
+
     stages {
         stage('Build') {
             steps {
@@ -53,7 +53,8 @@ pipeline {
                     aws ecs update-service \
                         --cluster devops-cluster \
                         --service devops-service \
-                        --task-definition devops-task \
+                        --list-task-definitions \
+                        --family-prefix devops-task \
                         --region us-east-1
                 '''
             }
