@@ -12,10 +12,11 @@ pipeline {
         AWS_CREDENTIALS = credentials('aws-credentials')
         AWS_DEFAULT_REGION = 'us-east-1'
     }
-    
+ 
     triggers {
         githubPush()
     }
+    
     
     stages {
         stage('Build') {
