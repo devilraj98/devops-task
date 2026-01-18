@@ -10,6 +10,10 @@ TASK_DEFINITION="devops-task"
 REGION="us-east-1"
 LOG_GROUP="/ecs/devops-task"
 SECURITY_GROUP_NAME="devops-ecs-sg"
+EXECUTION_ROLE_NAME="ecsTaskExecutionRole"
+
+# Get AWS Account ID
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
 # Function to check if resource exists
 check_cluster() {
@@ -23,6 +27,50 @@ check_log_group() {
 check_security_group() {
     aws ec2 describe-security-groups --filters "Name=group-name,Values=$SECURITY_GROUP_NAME" --query 'SecurityGroups[0].GroupId' --output text --region $REGION 2>/dev/null
 }
+
+check_iam_role() {
+    aws iam get-role --role-name $EXECUTION_ROLE_NAME --query 'Role.RoleName' --output text 2>/dev/null
+}
+
+# Create ECS Task Execution Role if it doesn't exist
+echo "Checking ECS Task Execution Role..."
+if [ "$(check_iam_role)" != "$EXECUTION_ROLE_NAME" ]; then
+    echo "Creating ECS Task Execution Role..."
+    
+    # Create trust policy
+    cat > trust-policy.json << EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+    
+    # Create the role
+    aws iam create-role \
+        --role-name $EXECUTION_ROLE_NAME \
+        --assume-role-policy-document file://trust-policy.json
+    
+    # Attach the AWS managed policy
+    aws iam attach-role-policy \
+        --role-name $EXECUTION_ROLE_NAME \
+        --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+    
+    # Clean up temp file
+    rm trust-policy.json
+    
+    echo "Waiting for role to be available..."
+    sleep 10
+else
+    echo "ECS Task Execution Role already exists"
+fi
 
 # Create ECS cluster if it doesn't exist
 echo "Checking ECS cluster..."
@@ -71,6 +119,8 @@ else
 fi
 
 echo "ECS infrastructure setup completed!"
+echo "Account ID: $ACCOUNT_ID"
+echo "Execution Role: arn:aws:iam::$ACCOUNT_ID:role/$EXECUTION_ROLE_NAME"
 echo "Cluster: $CLUSTER_NAME"
 echo "Security Group: $SECURITY_GROUP_ID"
 echo "Subnets: $SUBNET_IDS"

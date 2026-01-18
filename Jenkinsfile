@@ -61,9 +61,15 @@ pipeline {
             steps {
                 echo 'Deploying to AWS ECS...'
                 sh '''
+                    # Get AWS Account ID and update task definition
+                    ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+                    
+                    # Create updated task definition with correct account ID
+                    sed "s/509399606878/$ACCOUNT_ID/g" task-definition.json > task-definition-updated.json
+                    
                     # Register new task definition with updated image
                     TASK_DEF_ARN=$(aws ecs register-task-definition \
-                        --cli-input-json file://task-definition.json \
+                        --cli-input-json file://task-definition-updated.json \
                         --region us-east-1 \
                         --query 'taskDefinition.taskDefinitionArn' \
                         --output text)
