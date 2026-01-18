@@ -97,7 +97,7 @@ pipeline {
                         SECURITY_GROUP_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=devops-ecs-sg" --query "SecurityGroups[0].GroupId" --output text --region us-east-1)
                         
                         # Update service definition with target group ARN
-                        sed "s/TARGET_GROUP_ARN_PLACEHOLDER/$TARGET_GROUP_ARN/g" service-definition.json > service-definition-updated.json
+                        sed "s|TARGET_GROUP_ARN_PLACEHOLDER|$TARGET_GROUP_ARN|g" service-definition.json > service-definition-updated.json
                         
                         aws ecs create-service \
                             --cluster devops-cluster \
