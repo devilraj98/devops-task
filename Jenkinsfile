@@ -20,17 +20,14 @@ pipeline {
     stages {
         stage('Infrastructure Setup') {
             steps {
-                echo 'Setting up AWS ECS infrastructure...'
+                echo 'Setting up AWS ECS infrastructure with Python...'
                 sh '''
-                    # Make script executable
-                    chmod +x ecs-setup.sh
-                    chmod +x alb-setup.sh
+                    # Install Python dependencies
+                    pip3 install -r requirements.txt
                     
-                    # Run infrastructure setup (idempotent)
-                    ./ecs-setup.sh || echo "Infrastructure already exists or setup completed"
-                    
-                    # Setup ALB for fixed endpoint
-                    ./alb-setup.sh || echo "ALB already exists or setup completed"
+                    # Run Python infrastructure setup scripts
+                    python3 ecs-setup.py
+                    python3 alb-setup.py
                 '''
             }
         }
