@@ -1,6 +1,6 @@
 # DevOps CI/CD Pipeline Project
 
-A complete CI/CD pipeline implementation for a Node.js application using Jenkins, Docker, AWS ECS, Application Load Balancer, and CloudWatch monitoring.
+A complete CI/CD pipeline implementation for a Node.js application using Jenkins, Docker, AWS ECS, Application Load Balancer, and CloudWatch monitoring with **Python-based infrastructure automation**.
 
 ## 🏗️ Architecture Diagram
 
@@ -20,9 +20,9 @@ A complete CI/CD pipeline implementation for a Node.js application using Jenkins
                                 │                        ▲
                                 ▼                        │
                        ┌─────────────────┐    ┌─────────────────┐
-                       │ Application     │    │ Infrastructure  │
-                       │ Load Balancer   │    │ Automation      │
-                       │ (Fixed Endpoint)│    │ (IAM Roles)     │
+                       │ Application     │    │ Python Scripts  │
+                       │ Load Balancer   │    │ Infrastructure  │
+                       │ (Fixed Endpoint)│    │ Automation      │
                        └─────────────────┘    └─────────────────┘
 ```
 
@@ -31,7 +31,7 @@ A complete CI/CD pipeline implementation for a Node.js application using Jenkins
 This project demonstrates a complete DevOps CI/CD pipeline with:
 - **Source Control**: GitHub with branching strategy (main/dev)
 - **CI/CD**: Jenkins pipeline with automated builds
-- **Infrastructure Automation**: Automated AWS resource provisioning
+- **Infrastructure Automation**: **Python scripts with boto3** (upgraded from bash)
 - **Containerization**: Docker with multi-stage builds
 - **Registry**: DockerHub for image storage
 - **Deployment**: AWS ECS (Fargate) for container orchestration
@@ -39,14 +39,32 @@ This project demonstrates a complete DevOps CI/CD pipeline with:
 - **Monitoring**: CloudWatch for logs and metrics
 - **Security**: Automated IAM role creation and management
 
+## 🐍 **Python Infrastructure Scripts (NEW)**
+
+### **Why Python Over Bash?**
+- **Better Error Handling**: Try/catch blocks vs bash error codes
+- **JSON Parsing**: Native JSON support vs complex bash parsing
+- **AWS SDK Integration**: Direct boto3 calls vs AWS CLI
+- **Readability**: More maintainable and easier to understand
+- **Cross-Platform**: Works on Windows/Linux/Mac
+- **Testing**: Unit tests and better debugging capabilities
+- **Professional**: Industry-standard practices
+
+### **Python Scripts:**
+- **`ecs-setup.py`**: ECS cluster, IAM roles, security groups, CloudWatch
+- **`alb-setup.py`**: Application Load Balancer, target groups, listeners
+- **`cleanup.py`**: Complete infrastructure cleanup
+- **`requirements.txt`**: Python dependencies (boto3)
+
 ## 🚀 Pipeline Flow
 
-### 1. Infrastructure Setup (NEW)
-- Automated AWS ECS cluster creation
-- IAM role provisioning with proper permissions
-- Application Load Balancer setup for fixed endpoint
-- Security group and VPC configuration
-- CloudWatch log group creation
+### 1. Infrastructure Setup (PYTHON-POWERED)
+- **Python Scripts**: boto3-based infrastructure automation
+- **ECS Cluster**: Automated creation with error handling
+- **IAM Roles**: Dynamic role provisioning with proper permissions
+- **Application Load Balancer**: Fixed endpoint setup
+- **Security Groups**: Automated network configuration
+- **CloudWatch**: Log group creation and monitoring setup
 
 ### 2. Code Commit
 - Developer pushes code to `dev` branch
@@ -86,31 +104,40 @@ This project demonstrates a complete DevOps CI/CD pipeline with:
 - DockerHub account
 - GitHub repository
 - EC2 instance for Jenkins
+- **Python 3.6+** and pip3 installed on Jenkins server
 
-### 1. Infrastructure Setup (FULLY AUTOMATED)
+### 1. Infrastructure Setup (PYTHON-AUTOMATED)
 
 ```bash
 # Clone repository
 git clone https://github.com/devilraj98/devops-task.git
 cd devops-task
 
-# Infrastructure is now automatically created by Jenkins pipeline!
+# Infrastructure is now automatically created by Python scripts!
 # No manual setup required - just run the pipeline
 ```
 
-**What gets created automatically:**
-- ECS Cluster (`devops-cluster`)
-- IAM Execution Role (`ecsTaskExecutionRole`)
-- Application Load Balancer (`devops-alb`)
-- Target Group (`devops-targets`)
-- Security Group (`devops-ecs-sg`)
-- CloudWatch Log Group (`/ecs/devops-task`)
+**What gets created automatically by Python scripts:**
+- ECS Cluster (`devops-cluster`) with boto3
+- IAM Execution Role (`ecsTaskExecutionRole`) with proper policies
+- Application Load Balancer (`devops-alb`) with listeners
+- Target Group (`devops-targets`) with health checks
+- Security Group (`devops-ecs-sg`) with ports 80 and 3000
+- CloudWatch Log Group (`/ecs/devops-task`) for centralized logging
+
+**Python Script Features:**
+- **Idempotent**: Safe to run multiple times
+- **Error Handling**: Comprehensive exception management
+- **AWS SDK**: Direct boto3 integration (no AWS CLI dependency)
+- **Cross-Platform**: Works on Windows/Linux/Mac
+- **Maintainable**: Clean, readable Python code
 
 ### 2. Jenkins Configuration
 
 1. **Install Jenkins on EC2**
    ```bash
-   # Install Java, Jenkins, Docker, Node.js, AWS CLI
+   # Install Java, Jenkins, Docker, Node.js, AWS CLI, Python 3
+   sudo yum install python3 python3-pip -y  # For Amazon Linux
    # Configure security groups (ports 8080, 80)
    ```
 
@@ -126,7 +153,7 @@ cd devops-task
 
 4. **Create Pipeline Job**
    - Repository: `https://github.com/devilraj98/devops-task.git`
-   - Branch: `*/dev`
+   - Branch: `*/python-scripts` (or your Python branch)
    - Pipeline script from SCM
 
 ### 3. GitHub Webhook Setup
@@ -169,12 +196,13 @@ devops-task/
 ├── test.js                   # Automated tests
 ├── Dockerfile                # Container configuration
 ├── .dockerignore            # Docker build exclusions
-├── Jenkinsfile              # CI/CD pipeline definition
+├── Jenkinsfile              # CI/CD pipeline definition (Python-powered)
 ├── task-definition.json     # ECS task configuration
-├── service-definition.json  # ECS service with ALB config (NEW)
-├── ecs-setup.sh            # AWS ECS setup script (ENHANCED)
-├── alb-setup.sh            # Application Load Balancer setup (NEW)
-├── cleanup.sh              # Complete infrastructure cleanup (NEW)
+├── service-definition.json  # ECS service with ALB config
+├── ecs-setup.py            # Python ECS infrastructure setup (NEW)
+├── alb-setup.py            # Python ALB setup script (NEW)
+├── cleanup.py              # Python cleanup automation (NEW)
+├── requirements.txt        # Python dependencies (boto3) (NEW)
 ├── setup-monitoring.sh     # CloudWatch setup script
 ├── cloudwatch-dashboard.json # Monitoring dashboard
 └── README.md               # This documentation
@@ -182,12 +210,19 @@ devops-task/
 
 ## 🔧 Configuration Files
 
-### Jenkinsfile Pipeline Stages (UPDATED)
-- **Infrastructure Setup**: Automated AWS resource provisioning (NEW)
+### Jenkinsfile Pipeline Stages (PYTHON-ENHANCED)
+- **Infrastructure Setup**: Python scripts with boto3 (UPGRADED)
 - **Build**: Dependencies installation and testing
 - **Dockerize**: Container image creation
 - **Push**: Registry upload
-- **Deploy**: ECS service with ALB integration (ENHANCED)
+- **Deploy**: ECS service with ALB integration
+
+### Python Infrastructure Scripts (NEW)
+- **`ecs-setup.py`**: Creates ECS cluster, IAM roles, security groups, CloudWatch logs
+- **`alb-setup.py`**: Sets up Application Load Balancer, target groups, listeners
+- **`cleanup.py`**: Complete infrastructure cleanup with proper resource ordering
+- **Error Handling**: Comprehensive exception management with boto3
+- **Idempotent**: Safe to run multiple times without side effects
 
 ### ECS Task Definition
 - **CPU**: 256 units (0.25 vCPU)
@@ -230,25 +265,29 @@ After successful deployment:
    aws elbv2 describe-load-balancers --names devops-alb --query 'LoadBalancers[0].DNSName' --output text
    ```
 
-## 🧹 Infrastructure Cleanup (AUTOMATED)
+## 🧹 Infrastructure Cleanup (PYTHON-AUTOMATED)
 
-### Complete Cleanup Script
+### Complete Python Cleanup Script
 ```bash
-# Make cleanup script executable
-chmod +x cleanup.sh
+# Run Python cleanup script
+python3 cleanup.py
 
-# Delete all infrastructure
-./cleanup.sh
+# Or with pip install first
+pip3 install -r requirements.txt
+python3 cleanup.py
 ```
 
-### What Gets Deleted:
-- ECS Service and Cluster
-- Application Load Balancer and Target Group
+### What Gets Deleted by Python Script:
+- ECS Service (scales to 0 first, then deletes)
+- ECS Cluster
+- ALB Listeners (deleted before ALB)
+- Application Load Balancer
+- Target Group
 - Security Groups
 - CloudWatch Log Groups
-- IAM Roles and Policies
+- IAM Roles and attached policies
 
-### Jenkins Cleanup Pipeline
+### Jenkins Cleanup Pipeline (Python)
 Create a separate Jenkins job for cleanup:
 ```groovy
 pipeline {
@@ -260,20 +299,28 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'dev', url: 'https://github.com/devilraj98/devops-task.git'
+                git branch: 'python-scripts', url: 'https://github.com/devilraj98/devops-task.git'
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh 'pip3 install -r requirements.txt'
             }
         }
         stage('Cleanup') {
             steps {
-                sh '''
-                    chmod +x cleanup.sh
-                    ./cleanup.sh
-                '''
+                sh 'python3 cleanup.py'
             }
         }
     }
 }
 ```
+
+### Python Cleanup Advantages:
+- **Proper Resource Ordering**: Deletes resources in correct dependency order
+- **Error Handling**: Continues cleanup even if some resources don't exist
+- **Comprehensive**: Handles all resource types with boto3
+- **Logging**: Clear status messages for each deletion step
 
 ## 🔄 Branching Strategy
 
@@ -313,11 +360,14 @@ aws logs tail /ecs/devops-task --follow
 
 ## 📈 Best Practices Implemented
 
-- ✅ **Automated Infrastructure Provisioning** (NEW)
-- ✅ **Fixed Application Endpoint with ALB** (NEW)
-- ✅ **Dynamic Account ID Detection** (NEW)
-- ✅ **Idempotent Infrastructure Scripts** (NEW)
-- ✅ **Complete Cleanup Automation** (NEW)
+- ✅ **Python Infrastructure Automation** (UPGRADED)
+- ✅ **boto3 AWS SDK Integration** (NEW)
+- ✅ **Professional Error Handling** (NEW)
+- ✅ **Cross-Platform Compatibility** (NEW)
+- ✅ **Fixed Application Endpoint with ALB**
+- ✅ **Dynamic Account ID Detection**
+- ✅ **Idempotent Infrastructure Scripts**
+- ✅ **Complete Cleanup Automation**
 - ✅ Automated testing in CI pipeline
 - ✅ Multi-stage Docker builds
 - ✅ Infrastructure as Code (ECS task definitions)
@@ -528,14 +578,23 @@ aws logs tail /ecs/devops-task --follow
 - Error handling with `2>/dev/null` for graceful failures
 - Safe to run multiple times without side effects
 
-**Q7: Explain your Docker strategy and multi-stage builds**
+**Q7: Explain your Python infrastructure automation approach**
+- Migrated from bash scripts to Python for better maintainability
+- boto3 SDK for direct AWS API integration (no AWS CLI dependency)
+- Comprehensive error handling with try/catch blocks
+- JSON parsing with native Python support
+- Cross-platform compatibility (Windows/Linux/Mac)
+- Professional development practices with proper logging
+- Idempotent scripts safe to run multiple times
+
+**Q8: Explain your Docker strategy and multi-stage builds**
 - Dockerfile optimized for Node.js applications
 - Multi-stage builds to reduce image size
 - .dockerignore to exclude unnecessary files
 - Image tagging with build numbers for versioning
 - DockerHub registry for image storage
 
-**Q8: How do you handle secrets and sensitive data?**
+**Q9: How do you handle secrets and sensitive data?**
 - Jenkins credentials plugin for DockerHub and AWS access
 - No hardcoded secrets in code or Dockerfiles
 - Environment variables for configuration
@@ -659,10 +718,12 @@ aws logs tail /ecs/devops-task --follow
 
 **AWS Services**: ECS, Fargate, ALB, CloudWatch, IAM, VPC, Route 53, ACM
 **DevOps Tools**: Jenkins, Docker, Git, GitHub Webhooks
+**Programming**: **Python, boto3, bash scripting**
 **Concepts**: CI/CD, Infrastructure as Code, Zero-downtime deployment, Blue-green deployment
 **Security**: IAM roles, Security groups, Secrets management, Container scanning
 **Monitoring**: CloudWatch Logs, Metrics, Alarms, Dashboards
 **Networking**: VPC, Subnets, Security groups, Load balancers, Target groups
+**Python Libraries**: **boto3, botocore, json, sys, time**
 
 > **💡 Pro Tip**: Be ready to draw architecture diagrams and explain the data flow through your pipeline!
 
